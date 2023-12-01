@@ -1,0 +1,101 @@
+﻿@page "/buscarcliente"
+@using BlazorAppBela.Data;
+@using Newtonsoft.Json;
+@using RestSharp;
+@using System.Net;
+@inject IClienteAppService clienteService;
+@inject NavigationManager navigation;
+
+<PageTitle>Buscar clientes</PageTitle>
+
+<h1>Busca de clientes</h1>
+
+<div class="form-group">
+    <label for="email">E-mail</label>
+    <input type="email" class="form-control" @bind="email" id="email" placeholder="Digite o e-mail do cliente que deseja buscar">
+</div>
+<br />
+@if (retornoMensagem == "Cliente encontrado!")
+{
+            <p class="@(retornoMensagem == "Cliente encontrado!" ? "text-success" : "text-danger")">@retornoMensagem</p>
+            
+}
+@if (retornoMensagem == "Cliente não encontrado!")
+{
+            <p class="@(retornoMensagem == "Cliente não encontrado!" ? "text-danger" : "text-danger")">@retornoMensagem</p>
+            
+}
+
+@if (clientes != null)
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Cidade</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var cliente in clientes)
+            {
+                        <tr>
+                            <td>@cliente.Nome</td>
+                            <td>@cliente.Email</td>
+                            <td>@cliente.Telefone</td>
+                            <td>@cliente.Cidade</td>
+                            <td>
+
+                        <button class="btn btn-info">Editar</button>
+                        <button class="btn btn-danger" @onclick="() => ExcluirCliente(cliente.Email)">Excluir</button>
+                    </td>
+                        </tr>
+            }
+            </tbody>
+        </table>
+}
+
+<div>
+    <button type="submit" class="btn btn-primary" @onclick="() => BuscarClientesync(email)">Buscar</button>
+</div>
+
+@code {
+    public string email;
+    public string retornoMensagem = null;
+    public IList<ClienteModel> clientes;
+
+    public async Task<IList<ClienteModel>> BuscarClientesync(string email)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            // If no email is provided, return all clients
+            clientes = await clienteService.GetAllClientesAsync();
+        }
+        else
+        {
+            // If an email is provided, search for a specific client
+            var cliente = await clienteService.GetClienteAsync(email);
+            clientes = cliente != null ? new List<ClienteModel>() { cliente } : new List<ClienteModel>();
+            if(clientes is null)
+            {
+                retornoMensagem = "Cliente não encontrado!";
+            }
+        }
+        return clientes;
+    }
+
+    public async void ExcluirCliente(string email)
+    {
+        await clienteService.DeleteClienteAsync(email);
+        navigation.NavigateTo("/buscarcliente", true);
+    }
+
+    public async Task<IList<ClienteModel>> EditarCliente(ClienteModel cliente)
+    {
+        await clienteService.UpdateClienteAsync(cliente);
+        var obj = await clienteService.GetClienteAsync(email);
+        clientes = obj != null ? new List<ClienteModel>() { obj } : new List<ClienteModel>();
+        return clientes;
+    }
+}

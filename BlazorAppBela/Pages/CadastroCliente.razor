@@ -1,0 +1,82 @@
+﻿@page "/cadastrocliente"
+@using BlazorAppBela.Data;
+@using Newtonsoft.Json;
+@using RestSharp;
+@using System.Net;
+@inject IClienteAppService clienteService;
+
+<PageTitle>Cadastro cliente</PageTitle>
+
+<h1>Cadastre um cliente</h1>
+
+
+<div class="form-group">
+    <label for="name">Nome</label>
+    <input type="text" class="form-control" @bind="nome" id="name" placeholder="Digite seu nome">
+</div>
+<div class="form-group">
+    <label for="email">E-mail</label>
+    <input type="email" class="form-control" @bind="email" id="email" placeholder="Digite seu e-mail">
+</div>
+<div class="form-group">
+    <label for="date">Data de Nascimento</label>
+    <input type="date" class="form-control" @bind="date" id="date" placeholder="Digite sua Data de Nascimento">
+</div>
+<div class="form-group">
+    <label for="phone">Telefone</label>
+    <input type="tel" class="form-control" @bind="phone" id="phone" placeholder="Digite seu telefone">
+</div>
+<div class="form-group">
+    <label for="city">Cidade</label>
+    <input type="text" class="form-control" @bind="city" id="city" placeholder="Digite sua cidade">
+</div>
+<div class="form-group">
+    <label for="pass">Senha</label>
+    <input type="password" class="form-control" @bind="password" id="password" placeholder="Digite sua Senha">
+</div>
+
+<div>
+    @if (retornoMensagem != null)
+    {
+        <p class="@(retornoMensagem == "Cliente criado com sucesso!" ? "text-success" : "text-danger")">@retornoMensagem</p>
+    }
+</div>
+<br />
+<button type="submit" class="btn btn-primary" @onclick="CreateCliente">Salvar</button>
+
+
+@code {
+
+    public string nome;
+    public string email;
+    public string phone;
+    public string city;
+    public string password;
+    public DateTime date;
+    public string retornoMensagem = null;
+
+    public async Task<string> CreateCliente()
+    {
+        var cliente = new ClienteModel
+            {
+                Nome = nome,
+                Cidade = city,
+                Email = email,
+                Telefone = phone,
+                Senha = password,
+                DataNascimento = date,
+            };
+
+        var response = await clienteService.CreateClienteAsync(cliente);
+        if(response != null)
+        {
+            retornoMensagem = "Cliente criado com sucesso!";
+            return retornoMensagem;
+        }
+        retornoMensagem = "Não foi possível criar o cliente. Preencha corretamente todos os dados.";
+        return retornoMensagem;
+
+    }
+
+   
+}

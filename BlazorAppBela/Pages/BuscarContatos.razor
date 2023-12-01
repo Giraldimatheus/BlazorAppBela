@@ -1,0 +1,96 @@
+﻿@page "/buscarcontato"
+@using BlazorAppBela.Data;
+@using Newtonsoft.Json;
+@using RestSharp;
+@using System.Net;
+@inject IContatoAppService contatoAppService;
+@inject NavigationManager navigation;
+
+<PageTitle>Buscar contatos</PageTitle>
+
+<h1>Busca de contatos</h1>
+<div class="form-group">
+    <label for="email">E-mail</label>
+    <input type="email" class="form-control" @bind="email" id="email" placeholder="Digite o e-mail do contato que deseja buscar">
+</div>
+@if (retornoMensagem != null)
+{
+            <p class="@(retornoMensagem == "Cliente encontrado!" ? "text-success" : "text-danger")">@retornoMensagem</p>
+}
+@if (contatos != null)
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Email da indicação</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var contato in contatos)
+            {
+                        <tr>
+                            <td>@contato.Nome</td>
+                            <td>@contato.Email</td>
+                            <td>@contato.Telefone</td>
+                            <td>@contato.EmailClienteConexao</td>
+                            <td>
+
+                        <button class="btn btn-info">Editar</button>
+                        <button class="btn btn-danger" @onclick="() => ExcluirContato(contato.Email)">Excluir</button>
+                    </td>
+                        </tr>
+            }
+            </tbody>
+        </table>
+}
+<div>
+    @if (retornoMensagem != null)
+    {
+            <p class="@(retornoMensagem == "Contato excluído com sucesso!" ? "text-danger" : "text-danger")">@retornoMensagem</p>
+    }
+</div>
+<br />
+<div>
+    <button type="submit" class="btn btn-primary" @onclick="() => BuscarContatosync(email)">Buscar</button>
+</div>
+
+@code {
+    public string email;
+    public string retornoMensagem = null;
+    public IList<ContatoModel> contatos;
+
+    public async Task<IList<ContatoModel>> BuscarContatosync(string email)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            // If no email is provided, return all clients
+            contatos = await contatoAppService.GetAllContatosAsync();
+        }
+        else
+        {
+            // If an email is provided, search for a specific client
+            var contato = await contatoAppService.GetContatoAsync(email);
+            contatos = contato != null ? new List<ContatoModel>() { contato } : new List<ContatoModel>();
+        }
+        return contatos;
+    }
+
+    public async void ExcluirContato(string email)
+    {
+        await contatoAppService.DeleteContatoAsync(email);
+        retornoMensagem = "Contato excluído com sucesso!";
+        navigation.NavigateTo("/buscarcontato", true);
+        
+    }
+
+    public async Task<IList<ContatoModel>> EditarContato(ContatoModel contato)
+    {
+        await contatoAppService.UpdateContatoAsync(contato);
+        var obj = await contatoAppService.GetContatoAsync(email);
+        contatos = obj != null ? new List<ContatoModel>() { obj } : new List<ContatoModel>();
+        return contatos;
+    }
+}

@@ -1,0 +1,75 @@
+﻿@page "/cadastrocontato"
+@using BlazorAppBela.Data;
+@using Newtonsoft.Json;
+@using RestSharp;
+@using System.Net;
+@inject IContatoAppService contatoAppService;
+
+<PageTitle>Cadastro contato</PageTitle>
+
+<h1>Cadastre um contato</h1>
+
+<div class="form-group">
+    <label for="name">Nome</label>
+    <input type="text" class="form-control" @bind="nome" id="name" placeholder="Digite seu nome">
+</div>
+<div class="form-group">
+    <label for="relac">Relacionamento</label>
+    <input type="text" class="form-control" @bind="relacionamento" id="relacionamento" placeholder="Digite seu relacionamento com o cliente">
+</div>
+<div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" class="form-control" @bind="email" id="email" placeholder="Digite seu Email">
+</div>
+<div class="form-group">
+    <label for="phone">Telefone</label>
+    <input type="tel" class="form-control" @bind="phone" id="phone" placeholder="Digite seu telefone">
+</div>
+<div class="form-group">
+    <label for="emailconex">Email</label>
+    <input type="email" class="form-control" @bind="emailconex" id="emailconex" placeholder="Digite o email do cliente que te indicou">
+</div>
+<div>
+    <div>
+    @if (retornoMensagem != null)
+    {
+        <p class="@(retornoMensagem == "Contato criado com sucesso!" ? "text-success" : "text-danger")">@retornoMensagem</p>
+    }
+</div>
+    <br />
+    <button type="submit" class="btn btn-primary" @onclick="CreteContato">Salvar</button>
+</div>
+
+
+@code{
+    public string nome;
+    public string email;
+    public string phone;
+    public string relacionamento;
+    public string emailconex;
+    public string retornoMensagem = null;
+
+    public async Task<string> CreteContato()
+    {
+        var contato = new ContatoModel
+            {
+                Nome = nome,
+                Relacionamento = relacionamento,
+                Email = email,
+                Telefone = phone,
+                EmailClienteConexao = emailconex
+            };
+
+        var response = await contatoAppService.CreateContatoAsync(contato);
+        if(response != null)
+        {
+            retornoMensagem = "Contato criado com sucesso!";
+            return retornoMensagem;
+        }
+        retornoMensagem = "Não foi possível criar o Contato. Preencha corretamente todos os dados.";
+        return retornoMensagem;
+
+    }
+
+
+    }
